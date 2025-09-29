@@ -1,0 +1,4 @@
+modelArgs:
+  name: deepseek-chat
+  api-key: sk-7ff846d5d9584202917a3fde3563015e
+  base-url: https://api.deepseek.com

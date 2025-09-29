@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: springai
+
+  profiles:
+    active: dev
+
+  ai:
+    openai:
+      api-key: ${modelArgs.api-key}
+      base-url: ${modelArgs.base-url}
+      chat:
+        options:
+          model: ${modelArgs.name}
