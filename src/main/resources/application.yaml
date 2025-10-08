@@ -12,3 +12,16 @@ spring:
       chat:
         options:
           model: ${modelArgs.name}
+    mcp:
+      server:
+        enabled: true
+        name: math_mcp_server
+        version: 1.0.0
+        sse-endpoint: /api/v1/sse
+        sse-message-endpoint: /api/v1/mcp
+        capabilities:
+          tool: true
+logging:
+  level:
+    io.modelcontextprotocol: TRACE
+    org.springframework.ai.mcp: TRACE
