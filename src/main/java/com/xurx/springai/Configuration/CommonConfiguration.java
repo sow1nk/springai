@@ -11,10 +11,10 @@ public class CommonConfiguration {
 
     @Bean
     public ChatClient chatClient(OpenAiChatModel openAiChatModel,
-                                  ToolCallbackProvider mathTool) {
+                                 ToolCallbackProvider toolCallbackProvider) {
         return ChatClient.builder(openAiChatModel)
                 .defaultSystem("你的名字是悟空")
-                .defaultToolCallbacks(mathTool.getToolCallbacks())
+                .defaultToolCallbacks(toolCallbackProvider.getToolCallbacks())
                 .build();
     }
 }
