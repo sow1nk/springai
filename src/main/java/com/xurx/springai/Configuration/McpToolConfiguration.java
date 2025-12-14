@@ -21,6 +21,12 @@ public class McpToolConfiguration {
         return new MySQLTool(jdbcTemplate);
     }
 
+    /**
+     * Tool 回调提供者，注册所有的 Tool 实例
+     * @param mathTool 数学工具
+     * @param mySQLTool 数据库工具
+     * @return
+     */
     @Bean
     public ToolCallbackProvider toolCallbackProvider(MathTool mathTool, MySQLTool mySQLTool) {
         return MethodToolCallbackProvider.builder()

@@ -1,0 +1,211 @@
+/* 主题系统 - CSS 变量 */
+
+:root {
+  /* 浅色主题 (默认) */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f7f7f8;
+  --bg-tertiary: #ececec;
+  --sidebar-bg: #f5f5f5;
+
+  --text-primary: #1a1a1a;
+  --text-secondary: #666666;
+  --text-tertiary: #999999;
+
+  --border-color: #e5e5e5;
+  --border-light: #f0f0f0;
+
+  --accent-color: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-light: #EDF3FE;
+
+  --success-color: #16a34a;
+  --error-color: #dc2626;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05);
+  --card-shadow: 0 22px 45px rgba(15, 23, 42, 0.08);
+
+  --user-bubble-bg: #EDF3FE;
+  --user-bubble-text: #1a1a1a;
+  --assistant-bubble-bg: #f8f9fa;
+  --assistant-bubble-text: #1a1a1a;
+  --assistant-bubble-border: #e5e5e5;
+
+  --code-bg: #f5f5f5;
+  --code-block-bg: #f8f9fa;
+  --code-block-text: #1a1a1a;
+
+  /* 语法高亮颜色 - 浅色主题 */
+  --syntax-keyword: #0000ff;
+  --syntax-string: #a31515;
+  --syntax-number: #098658;
+  --syntax-function: #795e26;
+  --syntax-comment: #008000;
+  --syntax-variable: #001080;
+  --syntax-type: #267f99;
+
+  --scrollbar-thumb: #d4d4d4;
+  --scrollbar-thumb-hover: #a3a3a3;
+
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+}
+
+/* 深色主题 */
+[data-theme="dark"] {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #262626;
+  --bg-tertiary: #333333;
+  --sidebar-bg: #1f1f1f;
+
+  --text-primary: #f5f5f5;
+  --text-secondary: #a3a3a3;
+  --text-tertiary: #737373;
+
+  --border-color: #404040;
+  --border-light: #333333;
+
+  --accent-color: #3b82f6;
+  --accent-hover: #60a5fa;
+  --accent-light: #2C2C2E;
+
+  --success-color: #22c55e;
+  --error-color: #ef4444;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --card-shadow: 0 22px 45px rgba(0, 0, 0, 0.55);
+
+  --user-bubble-bg: #2C2C2E;
+  --user-bubble-text: #f5f5f5;
+  --assistant-bubble-bg: #2a2a2a;
+  --assistant-bubble-text: #e5e5e5;
+  --assistant-bubble-border: #404040;
+
+  --code-bg: #333333;
+  --code-block-bg: #0d0d0d;
+  --code-block-text: #d4d4d4;
+
+  /* 语法高亮颜色 - 深色主题 */
+  --syntax-keyword: #569cd6;
+  --syntax-string: #ce9178;
+  --syntax-number: #b5cea8;
+  --syntax-function: #dcdcaa;
+  --syntax-comment: #6a9955;
+  --syntax-variable: #9cdcfe;
+  --syntax-type: #4ec9b0;
+
+  --scrollbar-thumb: #525252;
+  --scrollbar-thumb-hover: #737373;
+}
+
+/* 全局重置 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  line-height: 1.5;
+  transition: background var(--transition-normal), color var(--transition-normal);
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* 选中文本样式 */
+::selection {
+  background: var(--accent-color);
+  color: white;
+}
+
+/* Ant Design 组件深色模式修复 */
+[data-theme="dark"] .ant-tag {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .ant-btn-primary {
+  background: var(--accent-color);
+  border-color: var(--accent-color);
+  color: #ffffff;
+}
+
+[data-theme="dark"] .ant-btn-primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+[data-theme="dark"] .ant-modal-content {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .ant-modal-header {
+  background: var(--bg-primary);
+  border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .ant-modal-title {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .ant-modal-footer {
+  border-top-color: var(--border-color);
+}
+
+[data-theme="dark"] .ant-btn-default {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .ant-btn-default:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .ant-dropdown-menu {
+  background: var(--bg-primary);
+}
+
+[data-theme="dark"] .ant-dropdown-menu-item {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .ant-dropdown-menu-item:hover {
+  background: var(--bg-tertiary);
+}

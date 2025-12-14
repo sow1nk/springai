@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: springai
+
+  profiles:
+    active: dev
+
+  ai:
+    openai:
+      api-key: ${modelArgs.api-key}
+      base-url: ${modelArgs.base-url}
+      chat:
+        options:
+          model: ${modelArgs.name}
+    mcp:
+      server:
+        enabled: true
+        name: math_mcp_server
+        version: 1.0.0
+        sse-endpoint: /api/v1/sse
+        sse-message-endpoint: /api/v1/mcp
+        capabilities:
+          tool: true
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/mysql_prac
+    username: root
+    password: 1028
+logging:
+  level:
+    io.modelcontextprotocol: TRACE
+    org.springframework.ai.mcp: TRACE
