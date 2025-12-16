@@ -2,6 +2,7 @@ package com.xurx.springai.Configuration;
 
 import com.xurx.springai.Tool.MathTool;
 import com.xurx.springai.Tool.MySQLTool;
+import com.xurx.springai.Tool.WeatherTool;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.tool.method.MethodToolCallbackProvider;
 import org.springframework.context.annotation.Bean;
@@ -21,6 +22,11 @@ public class McpToolConfiguration {
         return new MySQLTool(jdbcTemplate);
     }
 
+    @Bean
+    public WeatherTool weatherTool() {
+        return new WeatherTool();
+    }
+
     /**
      * Tool 回调提供者，注册所有的 Tool 实例
      * @param mathTool 数学工具
@@ -28,9 +34,11 @@ public class McpToolConfiguration {
      * @return
      */
     @Bean
-    public ToolCallbackProvider toolCallbackProvider(MathTool mathTool, MySQLTool mySQLTool) {
+    public ToolCallbackProvider toolCallbackProvider(MathTool mathTool,
+                                                     MySQLTool mySQLTool,
+                                                     WeatherTool weatherTool) {
         return MethodToolCallbackProvider.builder()
-                .toolObjects(mathTool, mySQLTool)
+                .toolObjects(mathTool, mySQLTool, weatherTool)
                 .build();
     }
 }

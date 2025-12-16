@@ -67,6 +67,11 @@
             <artifactId>org.springframework.jdbc</artifactId>
             <version>3.2.2.RELEASE</version>
         </dependency>
+        <!--JDBC存储-->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-model-chat-memory-repository-jdbc</artifactId>
+        </dependency>
     </dependencies>
     <dependencyManagement>
         <dependencies>

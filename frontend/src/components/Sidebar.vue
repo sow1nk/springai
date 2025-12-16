@@ -93,10 +93,28 @@ onMounted(() => {
 })
 
 const toggleTheme = () => {
-  isDark.value = !isDark.value
-  const theme = isDark.value ? 'dark' : 'light'
-  document.documentElement.setAttribute('data-theme', theme)
-  localStorage.setItem('springai-theme', theme)
+  const newIsDark = !isDark.value
+  const theme = newIsDark ? 'dark' : 'light'
+
+  // 使用 View Transitions API（如果支持）实现更丝滑的切换
+  if (document.startViewTransition) {
+    document.startViewTransition(() => {
+      isDark.value = newIsDark
+      document.documentElement.setAttribute('data-theme', theme)
+      localStorage.setItem('springai-theme', theme)
+    })
+  } else {
+    // 回退方案：添加过渡类
+    document.documentElement.classList.add('theme-transitioning')
+    isDark.value = newIsDark
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('springai-theme', theme)
+
+    // 过渡结束后移除类
+    setTimeout(() => {
+      document.documentElement.classList.remove('theme-transitioning')
+    }, 400)
+  }
 }
 
 const toggleSidebar = () => {

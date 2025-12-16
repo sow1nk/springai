@@ -775,7 +775,7 @@ onMounted(() => {
   position: sticky;
   bottom: 0;
   padding: 16px 0 40px;
-  background: var(--bg-primary);
+  background: transparent;
 }
 
 .chat-input {

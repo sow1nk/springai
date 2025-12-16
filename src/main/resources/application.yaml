@@ -29,5 +29,9 @@ spring:
     password: 1028
 logging:
   level:
-    io.modelcontextprotocol: TRACE
-    org.springframework.ai.mcp: TRACE
+    root: INFO
+    io.modelcontextprotocol: DEBUG
+    org.springframework.ai.mcp: DEBUG
+    org.springframework.ai: DEBUG
+    org.springframework.ai.chat.client: DEBUG
+    com.xurx.springai: DEBUG
