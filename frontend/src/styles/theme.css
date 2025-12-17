@@ -25,11 +25,15 @@
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05);
   --card-shadow: 0 22px 45px rgba(15, 23, 42, 0.08);
 
-  --user-bubble-bg: #EDF3FE;
-  --user-bubble-text: #1a1a1a;
-  --assistant-bubble-bg: #f8f9fa;
-  --assistant-bubble-text: #1a1a1a;
-  --assistant-bubble-border: #e5e5e5;
+  /* 用户消息气泡 - 浅色 */
+  --user-bubble-bg: #f0f4f8;
+  --user-bubble-text: #1e293b;
+  --user-bubble-border: #e2e8f0;
+
+  /* AI消息气泡 - 浅色 */
+  --assistant-bubble-bg: #fafafa;
+  --assistant-bubble-text: #374151;
+  --assistant-bubble-border: #f0f0f0;
 
   --code-bg: #f5f5f5;
   --code-block-bg: #f8f9fa;
@@ -82,11 +86,15 @@
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
   --card-shadow: 0 22px 45px rgba(0, 0, 0, 0.55);
 
-  --user-bubble-bg: #2C2C2E;
-  --user-bubble-text: #f5f5f5;
-  --assistant-bubble-bg: #2a2a2a;
-  --assistant-bubble-text: #e5e5e5;
-  --assistant-bubble-border: #404040;
+  /* 用户消息气泡 - 深色 */
+  --user-bubble-bg: #2a3441;
+  --user-bubble-text: #e2e8f0;
+  --user-bubble-border: #3d4a5c;
+
+  /* AI消息气泡 - 深色 */
+  --assistant-bubble-bg: #242424;
+  --assistant-bubble-text: #d4d4d8;
+  --assistant-bubble-border: #333333;
 
   --code-bg: #333333;
   --code-block-bg: #0d0d0d;
