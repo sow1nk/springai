@@ -1,8 +1,9 @@
-package com.xurx.springai.Configuration;
+package com.xurx.springai.configuration;
 
-import com.xurx.springai.Tool.MathTool;
-import com.xurx.springai.Tool.MySQLTool;
-import com.xurx.springai.Tool.WeatherTool;
+import com.xurx.springai.tool.DateTimeTools;
+import com.xurx.springai.tool.MathTool;
+import com.xurx.springai.tool.MySQLTool;
+import com.xurx.springai.tool.WeatherTool;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.tool.method.MethodToolCallbackProvider;
 import org.springframework.context.annotation.Bean;
@@ -27,6 +28,11 @@ public class McpToolConfiguration {
         return new WeatherTool();
     }
 
+    @Bean
+    public DateTimeTools dateTimeTools(){
+        return new DateTimeTools();
+    }
+
     /**
      * Tool 回调提供者，注册所有的 Tool 实例
      * @param mathTool 数学工具
@@ -36,9 +42,15 @@ public class McpToolConfiguration {
     @Bean
     public ToolCallbackProvider toolCallbackProvider(MathTool mathTool,
                                                      MySQLTool mySQLTool,
-                                                     WeatherTool weatherTool) {
+                                                     WeatherTool weatherTool,
+                                                     DateTimeTools dateTimeTools) {
         return MethodToolCallbackProvider.builder()
-                .toolObjects(mathTool, mySQLTool, weatherTool)
+                .toolObjects(
+                        mathTool,
+                        mySQLTool,
+                        weatherTool,
+                        dateTimeTools
+                )
                 .build();
     }
 }

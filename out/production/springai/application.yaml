@@ -6,12 +6,33 @@ spring:
     active: dev
 
   ai:
-    openai:
-      api-key: ${modelArgs.api-key}
-      base-url: ${modelArgs.base-url}
+    # Chat Models
+    deepseek:
+      api-key: ${modelArgs.models.deepseek.api-key}
+      base-url: ${modelArgs.models.deepseek.base-url}
       chat:
         options:
-          model: ${modelArgs.name}
+          model: ${modelArgs.models.deepseek.name}
+    dashscope:
+      api-key: ${modelArgs.models.qwen.api-key}
+      base-url: ${modelArgs.models.qwen.base-url}
+      chat:
+        options:
+          model: ${modelArgs.models.qwen.name}
+    # Embedding Model
+    zhipuai:
+      api-key: ${modelArgs.models.zhipuai-embed.api-key}
+      embedding:
+        options:
+          model: ${modelArgs.models.zhipuai-embed.name}
+          dimensions: ${modelArgs.models.zhipuai-embed.dimensions}
+        base-url: ${modelArgs.models.zhipuai-embed.base-url}
+
+    vectorstore:
+      redis:
+        initialize-schema: true # 启动时自动创建Redis向量索引结构（首次部署需开启）
+        index-name: xurx-index  # Redis键名前缀，用于区分不同应用的向量数据
+        prefix: xurx-prefix # Redis向量索引名称
     mcp:
       server:
         enabled: true
@@ -21,17 +42,33 @@ spring:
         sse-message-endpoint: /api/v1/mcp
         capabilities:
           tool: true
+    chat:
+      memory:
+        repository:
+          jdbc:
+            initialize-schema: always
+            schema: classpath:sql/schema-mysql.sql
+    model:
+      audio:
+        speech: none
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/mysql_prac
     username: root
     password: 1028
+
+  data:
+    redis:
+      host: ${data.redis.host}
+      port: ${data.redis.port}
+      password: ${data.redis.password}
+
 logging:
   level:
     root: INFO
     io.modelcontextprotocol: DEBUG
-    org.springframework.ai.mcp: DEBUG
+#    org.springframework.ai.mcp: DEBUG
     org.springframework.ai: DEBUG
-    org.springframework.ai.chat.client: DEBUG
-    com.xurx.springai: DEBUG
+#    org.springframework.ai.chat.client: DEBUG
+#    com.xurx.springai: DEBUG

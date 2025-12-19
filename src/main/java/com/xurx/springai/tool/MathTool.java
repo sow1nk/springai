@@ -1,4 +1,4 @@
-package com.xurx.springai.Tool;
+package com.xurx.springai.tool;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.annotation.Tool;

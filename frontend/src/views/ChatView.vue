@@ -13,8 +13,23 @@
     <div class="chat-main">
       <div class="chat-header">
         <div class="header-left">
-          <img :src="SpringAIAvatar" />
-          <p>支持数学计算和MySQL数据库查询</p>
+          <div class="header-top">
+            <img :src="panda" />
+            <p>支持数学计算和MySQL数据库查询</p>
+          </div>
+          <a-select
+            v-model:value="selectedModel"
+            class="model-selector"
+            :bordered="true"
+            style="width: 140px;"
+          >
+            <a-select-option value="deepseek">
+              <span class="model-name">DeepSeek</span>
+            </a-select-option>
+            <a-select-option value="qwen">
+              <span class="model-name">Qwen</span>
+            </a-select-option>
+          </a-select>
         </div>
         <div class="header-right">
           <a-dropdown>
@@ -194,6 +209,7 @@ import { message, Modal } from 'ant-design-vue'
 import { ArrowUpOutlined, UserOutlined, SettingOutlined, LogoutOutlined, ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons-vue'
 import Sidebar from '../components/Sidebar.vue'
 import MarkdownRenderer from '../components/MarkdownRenderer.vue'
+import { sendChatMessageStream } from '../api/request.js'
 
 const sidebarCollapsed = ref(false)
 const chats = ref([])
@@ -207,6 +223,7 @@ const abortController = ref(null)
 const panda = ref("/images/panda.svg")
 const AIAvatar = ref("/images/xurx_masaike.png")
 const SpringAIAvatar = ref("/images/spring-logo.svg")
+const selectedModel = ref('deepseek') // 默认为deepseek
 
 const examples = [
   '计算 156 + 789',
@@ -448,32 +465,15 @@ const sendMessage = async () => {
   abortController.value = new AbortController()
 
   try {
-    const response = await fetch('/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const fullMessage = await sendChatMessageStream(
+      userMessage,
+      selectedModel.value,
+      (chunk, fullMsg) => {
+        streamingMessage.value = fullMsg
+        scrollToBottom()
       },
-      body: JSON.stringify({ prompt: userMessage }),
-      signal: abortController.value.signal
-    })
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-
-    const reader = response.body.getReader()
-    const decoder = new TextDecoder()
-    let fullMessage = ''
-
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-
-      const chunk = decoder.decode(value, { stream: true })
-      fullMessage += chunk
-      streamingMessage.value = fullMessage
-      scrollToBottom()
-    }
+      abortController.value.signal
+    )
 
     chat.messages.push({
       id: generateId(),
@@ -492,15 +492,6 @@ const sendMessage = async () => {
     }
 
     console.error('发送消息失败:', error)
-    let errorMessage = '发送消息失败'
-
-    if (error.message.includes('Failed to fetch')) {
-      errorMessage = '无法连接到服务器,请检查网络连接和后端服务'
-    } else if (error.message.includes('HTTP error')) {
-      errorMessage = `服务器错误: ${error.message}`
-    }
-
-    message.error(errorMessage)
     chat.messages.push({
       id: generateId(),
       role: 'assistant',
@@ -559,20 +550,24 @@ onMounted(() => {
   transition: border-color var(--transition-normal), background var(--transition-normal);
 }
 
-.header-left h1 {
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 4px;
-  transition: color var(--transition-normal);
+.header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.header-left img {
-  width: 120px;
+.header-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-top img {
+  width: 40px;
   height: 40px;
 }
 
-.header-left p {
+.header-top p {
   font-size: 13px;
   color: var(--text-secondary);
   margin: 0;
@@ -582,6 +577,50 @@ onMounted(() => {
 .header-right {
   display: flex;
   align-items: center;
+}
+
+.model-selector-wrapper {
+  margin-right: 16px;
+}
+
+.model-selector {
+  width: 150px;
+  border-radius: 8px;
+}
+
+.model-selector :deep(.ant-select-selector) {
+  border-radius: 8px !important;
+  border: 1px solid var(--border-color) !important;
+  background: var(--bg-secondary) !important;
+  transition: all var(--transition-fast);
+  padding: 4px 12px !important;
+  height: auto !important;
+}
+
+.model-selector:hover :deep(.ant-select-selector) {
+  border-color: var(--accent-color) !important;
+  background: var(--bg-primary) !important;
+}
+
+.model-selector :deep(.ant-select-focused .ant-select-selector) {
+  border-color: var(--accent-color) !important;
+  box-shadow: 0 0 0 2px var(--accent-light) !important;
+}
+
+.model-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.model-icon {
+  font-size: 16px;
+}
+
+.model-name {
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 14px;
 }
 
 .chat-content-wrapper {
@@ -714,7 +753,8 @@ onMounted(() => {
 
 .message-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
+  margin-top: 8px;
 }
 
 .message-content {

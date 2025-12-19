@@ -1,14 +1,4 @@
-package com.xurx.springai.Tool;
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+package com.xurx.springai.tool;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +6,10 @@ import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.util.StringUtils;
+
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 
 @Slf4j
