@@ -1,18 +1,20 @@
-package com.xurx.springai.tool;
+package com.coffee.springaimcpserver.tool;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-
 @Slf4j
+@Component
 @RequiredArgsConstructor
 public class MySQLTool {
 
@@ -31,8 +33,8 @@ public class MySQLTool {
     }
 
     @Tool(description = "执行只读 SQL 查询并返回结果列表，仅支持以 SELECT 开头的语句。")
-    public List<Map<String, Object>> executeSelect(String sql) {
-        // TODO 查询条件字段的完善
+    public List<Map<String, Object>> executeSelect(
+            @ToolParam(description = "要执行的SELECT查询语句") String sql) {
         log.info("SQL 查询语句: {}", sql);
         if (!StringUtils.hasText(sql)) {
             throw new IllegalArgumentException("SQL 语句不能为空。");
@@ -53,7 +55,8 @@ public class MySQLTool {
     }
 
     @Tool(description = "更新数据库中的数据，仅支持以 UPDATE、INSERT 或 DELETE 开头的语句。")
-    public int executeUpdate(String sql) {
+    public int executeUpdate(
+            @ToolParam(description = "要执行的UPDATE、INSERT或DELETE语句") String sql) {
         log.info("SQL 更新语句: {}", sql);
         if (!StringUtils.hasText(sql)) {
             throw new IllegalArgumentException("SQL 语句不能为空。");
