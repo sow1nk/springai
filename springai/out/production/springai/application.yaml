@@ -27,9 +27,6 @@ spring:
           model: ${modelArgs.models.zhipuai-embed.name}
           dimensions: ${modelArgs.models.zhipuai-embed.dimensions}
         base-url: ${modelArgs.models.zhipuai-embed.base-url}
-      chat:
-        options:
-          model: glm-4.5
 
     vectorstore:
       redis:
@@ -39,12 +36,14 @@ spring:
 
     # MCP Server 配置
     mcp:
-      client:
-        sse:
-          connections:
-            server1:
-              url: http://localhost:8081
-
+      server:
+        enabled: true
+        name: math_mcp_server
+        version: 1.0.0
+        sse-endpoint: /api/v1/sse
+        sse-message-endpoint: /api/v1/mcp
+        capabilities:
+          tool: true
     chat:
       memory:
         repository:
@@ -75,6 +74,3 @@ logging:
     org.springframework.ai: DEBUG
 #    org.springframework.ai.chat.client: DEBUG
 #    com.xurx.springai: DEBUG
-
-server:
-  port: 8080

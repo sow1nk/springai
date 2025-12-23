@@ -6,7 +6,7 @@ modelArgs:
       api-key: sk-f1166e788d72486ab7639073764c4ce2
       base-url: https://api.deepseek.com
     qwen:
-      name: qwen-flash
+      name: qwen-plus
       api-key: sk-d688c880e7824ccca2c001be7dc8ef16
       base-url: https://dashscope.aliyuncs.com/compatible-mode
 

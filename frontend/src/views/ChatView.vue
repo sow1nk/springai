@@ -26,8 +26,13 @@
             <a-select-option value="deepseek">
               <span class="model-name">DeepSeek</span>
             </a-select-option>
-            <a-select-option value="qwen">
-              <span class="model-name">Qwen</span>
+            <a-select-option value="qwen" disabled>
+              <a-tooltip title="当前模型暂未开放">
+                <span class="model-name">Qwen</span>
+              </a-tooltip>
+            </a-select-option>
+          <a-select-option value="zhipu">
+              <span class="model-name">Zhipu</span>
             </a-select-option>
           </a-select>
         </div>
@@ -586,6 +591,25 @@ onMounted(() => {
 .model-selector {
   width: 150px;
   border-radius: 8px;
+}
+
+/* 禁用选项样式 - 浅色模式 */
+.model-selector :deep(.ant-select-item-option-disabled) {
+  color: rgba(0, 0, 0, 0.25) !important;
+  cursor: not-allowed !important;
+}
+
+.model-selector :deep(.ant-select-item-option-disabled .model-name) {
+  color: rgba(0, 0, 0, 0.25) !important;
+}
+
+/* 禁用选项样式 - 深色模式 */
+[data-theme="dark"] .model-selector :deep(.ant-select-item-option-disabled) {
+  color: rgba(255, 255, 255, 0.25) !important;
+}
+
+[data-theme="dark"] .model-selector :deep(.ant-select-item-option-disabled .model-name) {
+  color: rgba(255, 255, 255, 0.25) !important;
 }
 
 .model-selector :deep(.ant-select-selector) {

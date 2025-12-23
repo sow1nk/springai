@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: springai-mcp-server
+  # 解决sse 404报错
+  main:
+    web-application-type: reactive
+
+  # MySQL数据源配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/mysql_prac
+    username: root
+    password: 1028
+
+server:
+  port: 8081

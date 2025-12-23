@@ -57,7 +57,7 @@
 
         <dependency>
             <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-starter-mcp-server-webmvc</artifactId>
+            <artifactId>spring-ai-starter-mcp-client-webflux</artifactId>
         </dependency>
 
         <dependency>

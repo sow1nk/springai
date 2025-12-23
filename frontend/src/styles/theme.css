@@ -287,3 +287,27 @@ html.theme-transitioning * {
 [data-theme="dark"] .ant-menu-item-divider {
   background-color: var(--border-color);
 }
+
+/* Select 下拉菜单深色模式 */
+[data-theme="dark"] .ant-select-dropdown {
+  background: var(--bg-primary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+[data-theme="dark"] .ant-select-item {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+  background: var(--bg-tertiary) !important;
+}
+
+[data-theme="dark"] .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background: var(--bg-tertiary) !important;
+  color: var(--accent-color) !important;
+}
+
+[data-theme="dark"] .ant-select-item-option-disabled {
+  color: rgba(255, 255, 255, 0.25) !important;
+  cursor: not-allowed !important;
+}

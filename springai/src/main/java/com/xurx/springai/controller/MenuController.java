@@ -1,6 +1,5 @@
 package com.xurx.springai.controller;
 
-import com.xurx.springai.dto.ChatRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
@@ -8,14 +7,10 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.document.Document;
-import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -71,23 +66,24 @@ public class MenuController {
         }
     }
 
-    @PostMapping("/askQuestion")
-    public String ragAskQuestion(ChatRequest chatRequest) {
-        String model = chatRequest.getModel();
-        String message = chatRequest.getMessage();
-        // 模型路由选择
-        ChatClient chatClient = chatClientMap.get(model);
-        if (chatClient == null) {
-            log.error("模型 {} 未找到，使用默认模型", model);
-            return "模型未找到，请检查模型名称。";
-        } else {
-            return chatClient.prompt()
-                    .system(p -> p.param("name", "xrx").param("identity", "postgraduate"))
-                    .user(message)
-                    .call()
-                    .content();
-        }
-    }
+//    @CrossOrigin
+//    @PostMapping("/askQuestion")
+//    public String ragAskQuestion(ChatRequest chatRequest) {
+//        String model = chatRequest.getModel();
+//        String message = chatRequest.getMessage();
+//        // 模型路由选择
+//        ChatClient chatClient = chatClientMap.get(model);
+//        if (chatClient == null) {
+//            log.error("模型 {} 未找到，使用默认模型", model);
+//            return "模型未找到，请检查模型名称。";
+//        } else {
+//            return chatClient.prompt()
+//                    .system(p -> p.param("name", "xrx").param("identity", "postgraduate"))
+//                    .user(message)
+//                    .call()
+//                    .content();
+//        }
+//    }
 
     @PostMapping("/search")
     public List<Document> search(@RequestParam("query") String query) {

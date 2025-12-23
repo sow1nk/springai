@@ -4,7 +4,6 @@ import com.xurx.springai.dto.ChatRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.deepseek.DeepSeekChatModel;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
@@ -18,7 +17,6 @@ public class ChatController {
 
     // 模型路由
     private final Map<String, ChatClient> chatClientMap;
-
     /**
      * GET 方式聊天接口，返回流式响应
      * @param
