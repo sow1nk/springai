@@ -26,10 +26,11 @@
             <a-select-option value="deepseek">
               <span class="model-name">DeepSeek</span>
             </a-select-option>
-            <a-select-option value="qwen" disabled>
-              <a-tooltip title="当前模型暂未开放">
-                <span class="model-name">Qwen</span>
-              </a-tooltip>
+            <a-select-option value="qwen">
+              <!-- <a-tooltip title="当前模型暂未开放">
+                
+              </a-tooltip> -->
+              <span class="model-name">Qwen</span>
             </a-select-option>
           <a-select-option value="zhipu">
               <span class="model-name">Zhipu</span>

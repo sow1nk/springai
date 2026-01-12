@@ -15,7 +15,6 @@ spring:
           model: ${modelArgs.models.deepseek.name}
     dashscope:
       api-key: ${modelArgs.models.qwen.api-key}
-      base-url: ${modelArgs.models.qwen.base-url}
       chat:
         options:
           model: ${modelArgs.models.qwen.name}
