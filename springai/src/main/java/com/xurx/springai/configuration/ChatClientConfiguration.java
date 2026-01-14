@@ -4,9 +4,11 @@ import com.alibaba.cloud.ai.dashscope.embedding.DashScopeEmbeddingModel;
 import com.xurx.springai.advisor.SensitiveWordFilterAdvisor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryRepository;
+import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.deepseek.DeepSeekChatModel;
 import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatModel;
 import org.springframework.ai.embedding.EmbeddingModel;
@@ -53,6 +55,7 @@ public class ChatClientConfiguration {
 
     /**
      * 敏感词过滤 Advisor
+     *
      * @param sensitiveWords
      * @return
      */
@@ -63,6 +66,7 @@ public class ChatClientConfiguration {
 
     /**
      * 聊天记忆组件
+     *
      * @param jdbcChatMemoryRepository
      * @return
      */
@@ -74,11 +78,11 @@ public class ChatClientConfiguration {
                 .build();
     }
 
-        /**
+    /**
      * 向量检索器
      */
     @Bean(name = "vectorStoreDocumentRetriever")
-    public VectorStoreDocumentRetriever vectorStoreDocumentRetriever(VectorStore vectorStore)  {
+    public VectorStoreDocumentRetriever vectorStoreDocumentRetriever(VectorStore vectorStore) {
         return VectorStoreDocumentRetriever.builder()
                 .topK(3)
                 .vectorStore(vectorStore)
@@ -87,8 +91,8 @@ public class ChatClientConfiguration {
     }
 
     /**
-     *  检索增强 RAG 顾问
-     *  配置 ContextualQueryAugmenter 允许空上下文，避免在找不到相关文档时干扰MCP工具调用
+     * 检索增强 RAG 顾问
+     * 配置 ContextualQueryAugmenter 允许空上下文，避免在找不到相关文档时干扰MCP工具调用
      */
     @Bean(name = "retrievalAugmentationAdvisor")
     public RetrievalAugmentationAdvisor retrievalAugmentationAdvisor(VectorStoreDocumentRetriever vectorStoreDocumentRetriever) {
@@ -120,46 +124,54 @@ public class ChatClientConfiguration {
      */
     @Bean
     public ChatClient dashscopeChatClient(SensitiveWordFilterAdvisor sensitiveWordFilterAdvisor,
-                                         RetrievalAugmentationAdvisor retrievalAugmentationAdvisor) {
+                                          RetrievalAugmentationAdvisor retrievalAugmentationAdvisor,
+                                          ChatMemory chatMemory) {
         return ChatClient.builder(dashScopeModel)
                 .defaultSystem(DEFAULT_SYSTEM_PROMPT)
                 .defaultToolCallbacks(mcpToolCallbackProvider.getToolCallbacks())
                 .defaultAdvisors(
                         sensitiveWordFilterAdvisor,
-                        retrievalAugmentationAdvisor
+                        retrievalAugmentationAdvisor,
+                        MessageChatMemoryAdvisor.builder(chatMemory).build()
                 )
                 .build();
     }
 
     /**
      * 智谱 ChatClient 实例
+     *
      * @return
      */
     @Bean
     public ChatClient zhipuChatClient(SensitiveWordFilterAdvisor sensitiveWordFilterAdvisor,
-                                      RetrievalAugmentationAdvisor retrievalAugmentationAdvisor) {
+                                      RetrievalAugmentationAdvisor retrievalAugmentationAdvisor,
+                                      ChatMemory chatMemory) {
         return ChatClient.builder(ZhiPuChatModel)
                 .defaultSystem(DEFAULT_SYSTEM_PROMPT)
                 .defaultToolCallbacks(mcpToolCallbackProvider.getToolCallbacks())
                 .defaultAdvisors(
                         sensitiveWordFilterAdvisor,
-                        retrievalAugmentationAdvisor
+                        retrievalAugmentationAdvisor,
+                        MessageChatMemoryAdvisor.builder(chatMemory).build()
                 )
                 .build();
     }
 
     /**
      * DeepSeek ChatClient 实例
+     *
      * @return
      */
     @Bean
     public ChatClient deepseekChatClient(SensitiveWordFilterAdvisor sensitiveWordFilterAdvisor,
-                                         RetrievalAugmentationAdvisor retrievalAugmentationAdvisor) {
+                                         RetrievalAugmentationAdvisor retrievalAugmentationAdvisor,
+                                         ChatMemory chatMemory) {
             return ChatClient.builder(deepSeekChatModel)
                     .defaultSystem(DEFAULT_SYSTEM_PROMPT)
                     .defaultAdvisors(
                             sensitiveWordFilterAdvisor,
-                            retrievalAugmentationAdvisor
+                            retrievalAugmentationAdvisor,
+                            MessageChatMemoryAdvisor.builder(chatMemory).build()
                     )
                     .defaultToolCallbacks(mcpToolCallbackProvider.getToolCallbacks())
                     .build();

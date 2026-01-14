@@ -56,15 +56,21 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/mysql_prac
-    username: root
-    password: 1028
+    url: ${datasource.url}
+    username: ${datasource.username}
+    password: ${datasource.password}
 
   data:
     redis:
       host: ${data.redis.host}
       port: ${data.redis.port}
       password: ${data.redis.password}
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.xurx.springai.entity
+  configuration:
+    map-underscore-to-camel-case: true
 
 logging:
   level:

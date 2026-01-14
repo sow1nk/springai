@@ -6,9 +6,14 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      },
       '/chat': {
         target: 'http://localhost:8080',
-        changeOrigin: true  // 避免跨域问题
+        changeOrigin: true
       }
     }
   }

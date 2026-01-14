@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xurx.springai.mapper.ChatRecordMapper">
+
+    <resultMap id="BaseResultMap" type="com.xurx.springai.entity.ChatRecord">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="user_id" property="userId" jdbcType="VARCHAR"/>
+        <result column="session_id" property="sessionId" jdbcType="VARCHAR"/>
+        <result column="role" property="role" jdbcType="VARCHAR"/>
+        <result column="content" property="content" jdbcType="VARCHAR"/>
+        <result column="model" property="model" jdbcType="VARCHAR"/>
+        <result column="tokens" property="tokens" jdbcType="INTEGER"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.xurx.springai.entity.ChatRecord" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO chat_record (user_id, session_id, role, content, model, tokens)
+        VALUES (#{userId}, #{sessionId}, #{role}, #{content}, #{model}, #{tokens})
+    </insert>
+
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        SELECT id, user_id, session_id, role, content, model, tokens, create_time
+        FROM chat_record
+        WHERE user_id = #{userId}
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="selectBySessionId" resultMap="BaseResultMap">
+        SELECT id, user_id, session_id, role, content, model, tokens, create_time
+        FROM chat_record
+        WHERE session_id = #{sessionId}
+        ORDER BY create_time ASC
+    </select>
+
+    <select id="selectByUserIdAndSessionId" resultMap="BaseResultMap">
+        SELECT id, user_id, session_id, role, content, model, tokens, create_time
+        FROM chat_record
+        WHERE user_id = #{userId} AND session_id = #{sessionId}
+        ORDER BY create_time ASC
+    </select>
+
+    <delete id="deleteByUserId">
+        DELETE FROM chat_record WHERE user_id = #{userId}
+    </delete>
+
+    <delete id="deleteBySessionId">
+        DELETE FROM chat_record WHERE session_id = #{sessionId}
+    </delete>
+
+</mapper>

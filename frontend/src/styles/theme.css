@@ -246,6 +246,12 @@ html.theme-transitioning * {
   border-top-color: var(--border-color);
 }
 
+[data-theme="dark"] .ant-modal-confirm .ant-modal-confirm-title,
+[data-theme="dark"] .ant-modal-confirm .ant-modal-confirm-body,
+[data-theme="dark"] .ant-modal-confirm .ant-modal-confirm-content {
+  color: var(--text-primary);
+}
+
 [data-theme="dark"] .ant-btn-default {
   background: var(--bg-secondary);
   border-color: var(--border-color);

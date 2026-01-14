@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { message as antMessage } from 'ant-design-vue'
+import { getToken, getUserInfo } from './auth'
 
 // Create axios instance
 const request = axios.create({
@@ -13,6 +14,23 @@ const request = axios.create({
 // Request interceptor
 request.interceptors.request.use(
   config => {
+    // Add JWT token
+    const token = getToken()
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+
+    // Add userId to request body for POST/PUT requests
+    const userInfo = getUserInfo()
+    if (userInfo.userId && (config.method === 'post' || config.method === 'put')) {
+      if (config.data) {
+        config.data = {
+          ...config.data,
+          userId: userInfo.userId
+        }
+      }
+    }
+
     return config
   },
   error => {
@@ -78,15 +96,26 @@ request.interceptors.response.use(
  * @param {string} model - Model name (deepseek or qwen)
  * @returns {Promise<string>} AI response content
  */
+// TODO: 目前前端只使用流式接口，该非流式方法暂未被引用，确认需求后再决定去留
 export const sendChatMessage = async (message, model) => {
   try {
+    const userInfo = getUserInfo()
+    const token = getToken()
+
+    const headers = {
+      'Content-Type': 'application/json'
+    }
+
+    if (token) {
+      headers.Authorization = `Bearer ${token}`
+    }
+
     const response = await axios.post('/chat', {
       message,
-      model
+      model,
+      userId: userInfo.userId
     }, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
+      headers
     })
     return response.data
   } catch (error) {
@@ -101,16 +130,37 @@ export const sendChatMessage = async (message, model) => {
  * @param {string} model - Model name (deepseek or qwen)
  * @param {Function} onChunk - Callback when receiving data chunk
  * @param {AbortSignal} signal - Signal for canceling request
+ * @param {string} sessionId - Session ID for grouping messages
  * @returns {Promise<string>} Complete AI response content
  */
-export const sendChatMessageStream = async (message, model, onChunk, signal) => {
+export const sendChatMessageStream = async (message, model, onChunk, signal, sessionId) => {
   try {
+    const userInfo = getUserInfo()
+    const token = getToken()
+
+    const headers = {
+      'Content-Type': 'application/json',
+    }
+
+    if (token) {
+      headers.Authorization = `Bearer ${token}`
+    }
+
+    const requestBody = {
+      message,
+      model,
+      userId: userInfo.userId
+    }
+
+    // Add sessionId if provided
+    if (sessionId) {
+      requestBody.sessionId = sessionId
+    }
+
     const response = await fetch('/chat', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ message, model }),
+      headers,
+      body: JSON.stringify(requestBody),
       signal
     })
 
@@ -155,4 +205,5 @@ export const sendChatMessageStream = async (message, model, onChunk, signal) => 
   }
 }
 
+// TODO: request 实例暂未在组件中直接引入，若无统一封装需求可移除
 export default request

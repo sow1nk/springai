@@ -46,7 +46,7 @@
               {{ userName }}
             </a-avatar>
             <template #overlay>
-              <a-menu>
+              <a-menu @click="handleMenuClick">
                 <a-menu-item key="profile" aria-label="个人信息">
                   <UserOutlined />
                   个人信息
@@ -212,11 +212,15 @@
 <script setup>
 import { ref, computed, nextTick, onMounted, h } from 'vue'
 import { message, Modal } from 'ant-design-vue'
+import { useRouter } from 'vue-router'
 import { ArrowUpOutlined, UserOutlined, SettingOutlined, LogoutOutlined, ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons-vue'
 import Sidebar from '../components/Sidebar.vue'
 import MarkdownRenderer from '../components/MarkdownRenderer.vue'
 import { sendChatMessageStream } from '../api/request.js'
+import { logout } from '../api/auth.js'
+import { getChatHistory, deleteConversation } from '../api/chat.js'
 
+const router = useRouter()
 const sidebarCollapsed = ref(false)
 const chats = ref([])
 const activeChat = ref(null)
@@ -224,12 +228,34 @@ const inputMessage = ref('')
 const loading = ref(false)
 const messagesContainer = ref(null)
 const streamingMessage = ref('')
-const userName = ref('我')
+const userName = ref(localStorage.getItem('username') || '我')
 const abortController = ref(null)
 const panda = ref("/images/panda.svg")
 const AIAvatar = ref("/images/xurx_masaike.png")
 const SpringAIAvatar = ref("/images/spring-logo.svg")
 const selectedModel = ref('deepseek') // 默认为deepseek
+const handleMenuClick = ({ key }) => {
+  if (key === 'logout') {
+    Modal.confirm({
+      title: '确认退出',
+      content: '确定要退出登录吗？',
+      icon: h(ExclamationCircleOutlined),
+      okText: '退出',
+      okType: 'danger',
+      cancelText: '取消',
+      centered: true,
+      onOk() {
+        logout()
+        message.success('已退出登录')
+        router.push('/auth')
+      }
+    })
+  } else if (key === 'profile') {
+    message.info('个人信息功能开发中')
+  } else if (key === 'settings') {
+    message.info('设置功能开发中')
+  }
+}
 
 const examples = [
   '计算 156 + 789',
@@ -304,8 +330,10 @@ const deleteChat = (id) => {
     okType: 'danger',
     cancelText: '取消',
     centered: true,
-    onOk() {
+    async onOk() {
       try {
+        await deleteConversation(id)
+
         const index = chats.value.findIndex(c => c.id === id)
 
         if (index === -1) {
@@ -338,6 +366,7 @@ const deleteChat = (id) => {
       } catch (error) {
         console.error('删除对话失败:', error)
         message.error('删除失败，请重试')
+        throw error
       }
     }
   })
@@ -427,6 +456,72 @@ const loadChats = () => {
   }
 }
 
+const loadChatHistoryFromDB = async () => {
+  const userId = localStorage.getItem('userId')
+  if (!userId) {
+    console.log('未找到userId，跳过加载历史记录')
+    return
+  }
+
+  try {
+    const records = await getChatHistory(userId)
+    console.log('从数据库加载聊天记录:', records)
+
+    // 按sessionId分组聊天记录
+    const sessionMap = new Map()
+    records.forEach(record => {
+      if (!sessionMap.has(record.sessionId)) {
+        sessionMap.set(record.sessionId, [])
+      }
+      sessionMap.get(record.sessionId).push({
+        id: record.id.toString(),
+        role: record.role,
+        content: record.content,
+        time: new Date(record.createTime).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+      })
+    })
+
+    // 将分组后的记录转换为chats格式
+    const dbChats = []
+    sessionMap.forEach((messages, sessionId) => {
+      if (messages.length > 0) {
+        const firstMessage = messages[0].content
+        dbChats.push({
+          id: sessionId,
+          title: firstMessage.substring(0, 20) + (firstMessage.length > 20 ? '...' : ''),
+          messages: messages,
+          createdAt: new Date(records.find(r => r.sessionId === sessionId).createTime)
+        })
+      }
+    })
+
+    // 按创建时间排序（数据库为准）
+    dbChats.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+
+    // 使用数据库的结果覆盖本地缓存，防止渲染不存在的记录
+    const previousActiveId = activeChat.value
+    chats.value = [...dbChats]
+
+    if (previousActiveId && chats.value.some(chat => chat.id === previousActiveId)) {
+      activeChat.value = previousActiveId
+    } else if (chats.value.length > 0) {
+      activeChat.value = chats.value[0].id
+    } else {
+      activeChat.value = null
+    }
+
+    // 保存到localStorage
+    saveChats()
+
+    if (dbChats.length > 0) {
+      message.success(`已加载 ${dbChats.length} 个历史会话`)
+    }
+  } catch (error) {
+    console.error('加载历史记录失败:', error)
+    message.error('加载历史记录失败')
+  }
+}
+
 const updateChatTitle = (chatId, firstMessage) => {
   const chat = chats.value.find(c => c.id === chatId)
   if (chat && chat.messages.length === 1) {
@@ -478,7 +573,8 @@ const sendMessage = async () => {
         streamingMessage.value = fullMsg
         scrollToBottom()
       },
-      abortController.value.signal
+      abortController.value.signal,
+      activeChat.value  // Pass the chat ID as sessionId
     )
 
     chat.messages.push({
@@ -520,12 +616,12 @@ const handleKeydown = (e) => {
   sendMessage()
 }
 
-onMounted(() => {
+onMounted(async () => {
   loadChats()
 
-  if (chats.value.length === 0) {
-    createNewChat()
-  }
+  // 从数据库加载历史记录
+  await loadChatHistoryFromDB()
+
 })
 </script>
 
@@ -583,6 +679,24 @@ onMounted(() => {
 .header-right {
   display: flex;
   align-items: center;
+  gap: 12px;
+}
+
+.theme-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.theme-btn:hover {
+  color: var(--accent-color);
+  background: var(--accent-light);
+  transform: rotate(15deg);
 }
 
 .model-selector-wrapper {
