@@ -10,7 +10,6 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
 
 import java.util.List;
 import java.util.Map;
@@ -125,4 +124,5 @@ public class ChatController {
         chatRecordService.deleteChatRecordsBySessionId(sessionId);
         return ResponseEntity.noContent().build();
     }
+
 }

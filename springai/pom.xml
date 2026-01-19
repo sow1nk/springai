@@ -78,11 +78,10 @@
             <artifactId>mybatis-spring-boot-starter</artifactId>
             <version>3.0.5</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.springframework/org.springframework.jdbc -->
+        <!-- Spring JDBC support (version managed by Spring Boot) -->
         <dependency>
             <groupId>org.springframework</groupId>
-            <artifactId>org.springframework.jdbc</artifactId>
-            <version>3.2.2.RELEASE</version>
+            <artifactId>spring-jdbc</artifactId>
         </dependency>
         <!--JDBC存储-->
         <dependency>
@@ -140,6 +139,10 @@
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-crypto</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-tika-document-reader</artifactId>
         </dependency>
     </dependencies>
     <dependencyManagement>

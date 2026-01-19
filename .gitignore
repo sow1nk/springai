@@ -32,3 +32,18 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Docker ###
+.env.docker
+*.log
+logs/
+
+### Node.js (Frontend) ###s
+node_modules/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+### Markdown files ###
+*.md
