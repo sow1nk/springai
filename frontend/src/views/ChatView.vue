@@ -51,10 +51,6 @@
                   <UserOutlined />
                   个人信息
                 </a-menu-item>
-                <a-menu-item key="documents" aria-label="文档管理">
-                  <FileTextOutlined />
-                  文档管理
-                </a-menu-item>
                 <a-menu-item key="settings" aria-label="设置">
                   <SettingOutlined />
                   设置
@@ -217,7 +213,7 @@
 import { ref, computed, nextTick, onMounted, h } from 'vue'
 import { message, Modal } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
-import { ArrowUpOutlined, UserOutlined, SettingOutlined, LogoutOutlined, ExclamationCircleOutlined, PlusOutlined, FileTextOutlined } from '@ant-design/icons-vue'
+import { ArrowUpOutlined, UserOutlined, SettingOutlined, LogoutOutlined, ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons-vue'
 import Sidebar from '../components/Sidebar.vue'
 import MarkdownRenderer from '../components/MarkdownRenderer.vue'
 import { sendChatMessageStream } from '../api/request.js'
@@ -256,8 +252,6 @@ const handleMenuClick = ({ key }) => {
     })
   } else if (key === 'profile') {
     message.info('个人信息功能开发中')
-  } else if (key === 'documents') {
-    router.push('/documents')
   } else if (key === 'settings') {
     message.info('设置功能开发中')
   }

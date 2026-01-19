@@ -50,14 +50,6 @@
 
     <div v-if="!collapsed" class="sidebar-footer">
       <button
-        class="knowledge-base-btn"
-        @click="goToDocuments"
-        aria-label="知识库管理"
-      >
-        <FolderOpenOutlined aria-hidden="true" />
-        <span>知识库</span>
-      </button>
-      <button
         class="theme-toggle"
         @click="toggleTheme"
         :aria-label="isDark ? '切换到浅色模式' : '切换到深色模式'"
@@ -71,18 +63,14 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import {
   PlusOutlined,
   MessageOutlined,
   DeleteOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  BulbOutlined,
-  FolderOpenOutlined
+  BulbOutlined
 } from '@ant-design/icons-vue'
-
-const router = useRouter()
 
 defineProps({
   collapsed: Boolean,
@@ -144,10 +132,6 @@ const selectChat = (id) => {
 const deleteChat = (id) => {
   console.log('删除对话被触发:', id)
   emit('delete-chat', id)
-}
-
-const goToDocuments = () => {
-  router.push('/documents')
 }
 </script>
 
@@ -332,32 +316,6 @@ const goToDocuments = () => {
   padding: 12px;
   border-top: 1px solid var(--border-color);
   transition: border-color var(--transition-normal);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.knowledge-base-btn {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  border: none;
-  border-radius: var(--radius-md);
-  background: var(--accent-light);
-  color: var(--accent-color);
-  font-size: 13px;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  font-weight: 500;
-}
-
-.knowledge-base-btn:hover {
-  background: var(--accent-color);
-  color: white;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
 }
 
 .theme-toggle {

@@ -9,7 +9,6 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +22,6 @@ import java.util.Map;
 @RequestMapping("/menu")
 @RequiredArgsConstructor
 @Slf4j
-@ConditionalOnProperty(prefix = "app.features", name = "menu-controller-enabled", havingValue = "true")
 public class MenuController {
 
     private final VectorStore vectorStore;

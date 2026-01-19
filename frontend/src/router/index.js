@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import ChatView from '../views/ChatView.vue'
 import AuthView from '../views/AuthView.vue'
-import DocumentView from '../views/DocumentView.vue'
 import { isAuthenticated } from '../api/auth'
 
 const routes = [
@@ -9,12 +8,6 @@ const routes = [
     path: '/',
     name: 'Chat',
     component: ChatView,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/documents',
-    name: 'Documents',
-    component: DocumentView,
     meta: { requiresAuth: true }
   },
   {
