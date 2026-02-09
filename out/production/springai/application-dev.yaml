@@ -8,7 +8,7 @@ modelArgs:
     qwen:
       name: qwen-flash
       api-key: sk-d688c880e7824ccca2c001be7dc8ef16
-      base-url: https://dashscope.aliyuncs.com/compatible-mode
+      base-url: https://dashscope.aliyuncs.com
 
     # Embedding model
     zhipuai-embed:

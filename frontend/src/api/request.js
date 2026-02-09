@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { message as antMessage } from 'ant-design-vue'
 import { getToken, getUserInfo } from './auth'
+import { fetchEventSource } from '@microsoft/fetch-event-source'
 
 // Create axios instance
 const request = axios.create({
@@ -125,84 +126,52 @@ export const sendChatMessage = async (message, model) => {
 }
 
 /**
- * Send chat message with streaming response
+ * Send chat message with streaming SSE response
  * @param {string} message - User message content
  * @param {string} model - Model name (deepseek or qwen)
- * @param {Function} onChunk - Callback when receiving data chunk
+ * @param {Function} onEvent - Callback: (eventType: string, data: object) => void
  * @param {AbortSignal} signal - Signal for canceling request
  * @param {string} sessionId - Session ID for grouping messages
  * @returns {Promise<string>} Complete AI response content
  */
-export const sendChatMessageStream = async (message, model, onChunk, signal, sessionId) => {
-  try {
-    const userInfo = getUserInfo()
-    const token = getToken()
+export const sendChatMessageStream = async (message, model, onEvent, signal, sessionId) => {
+  const userInfo = getUserInfo()
+  const token = getToken()
 
-    const headers = {
-      'Content-Type': 'application/json',
-    }
+  const headers = { 'Content-Type': 'application/json' }
+  if (token) headers.Authorization = `Bearer ${token}`
 
-    if (token) {
-      headers.Authorization = `Bearer ${token}`
-    }
+  const requestBody = { message, model, userId: userInfo.userId }
+  if (sessionId) requestBody.sessionId = sessionId
 
-    const requestBody = {
-      message,
-      model,
-      userId: userInfo.userId
-    }
+  let fullResponse = ''
 
-    // Add sessionId if provided
-    if (sessionId) {
-      requestBody.sessionId = sessionId
-    }
+  await fetchEventSource('/chat', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(requestBody),
+    signal,
+    onmessage(event) {
+      const parsed = JSON.parse(event.data)
 
-    const response = await fetch('/chat', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(requestBody),
-      signal
-    })
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-
-    const reader = response.body.getReader()
-    const decoder = new TextDecoder()
-    let fullMessage = ''
-
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-
-      const chunk = decoder.decode(value, { stream: true })
-      fullMessage += chunk
-
-      if (onChunk) {
-        onChunk(chunk, fullMessage)
+      if (event.event === 'step') {
+        onEvent('step', parsed)
+      } else if (event.event === 'token') {
+        fullResponse += parsed.content
+        onEvent('token', { content: fullResponse })
+      } else if (event.event === 'done') {
+        onEvent('done', parsed)
+      } else if (event.event === 'error') {
+        onEvent('error', parsed)
       }
-    }
+    },
+    onerror(err) {
+      throw err
+    },
+    openWhenHidden: true,
+  })
 
-    return fullMessage
-  } catch (error) {
-    if (error.name === 'AbortError') {
-      console.log('Request cancelled')
-      throw error
-    }
-
-    console.error('Send message failed:', error)
-
-    let errorMessage = 'Send message failed'
-    if (error.message.includes('Failed to fetch')) {
-      errorMessage = 'Cannot connect to server, please check network and backend service'
-    } else if (error.message.includes('HTTP error')) {
-      errorMessage = `Server error: ${error.message}`
-    }
-
-    antMessage.error(errorMessage)
-    throw error
-  }
+  return fullResponse
 }
 
 // TODO: request 实例暂未在组件中直接引入，若无统一封装需求可移除

@@ -13,29 +13,40 @@
     <div class="chat-main">
       <div class="chat-header">
         <div class="header-left">
-          <div class="header-top">
-            <img :src="panda" />
-            <p>支持数学计算和MySQL数据库查询</p>
-          </div>
-          <a-select
-            v-model:value="selectedModel"
-            class="model-selector"
-            :bordered="true"
-            style="width: 140px;"
+          <img :src="panda" class="header-logo" />
+          <a-popover
+            v-model:open="modelDropdownOpen"
+            trigger="click"
+            placement="bottomLeft"
+            :arrow="false"
+            overlay-class-name="model-dropdown-popover"
           >
-            <a-select-option value="deepseek">
-              <span class="model-name">DeepSeek</span>
-            </a-select-option>
-            <a-select-option value="qwen">
-              <!-- <a-tooltip title="当前模型暂未开放">
-                
-              </a-tooltip> -->
-              <span class="model-name">Qwen</span>
-            </a-select-option>
-          <a-select-option value="zhipu">
-              <span class="model-name">Zhipu</span>
-            </a-select-option>
-          </a-select>
+            <button class="model-trigger" @click.stop>
+              <span class="model-trigger-name">{{ modelMap[selectedModel]?.name || selectedModel }}</span>
+              <svg class="model-trigger-arrow" :class="{ open: modelDropdownOpen }" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <template #content>
+              <div class="model-dropdown-panel">
+                <div
+                  v-for="model in modelList"
+                  :key="model.value"
+                  class="model-dropdown-item"
+                  :class="{ selected: selectedModel === model.value }"
+                  @click="selectModel(model.value)"
+                >
+                  <div class="model-item-info">
+                    <span class="model-item-name">{{ model.name }}</span>
+                    <span class="model-item-desc">{{ model.desc }}</span>
+                  </div>
+                  <svg v-if="selectedModel === model.value" class="model-item-check" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M3 8.5L6.5 12L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+              </div>
+            </template>
+          </a-popover>
         </div>
         <div class="header-right">
           <a-dropdown>
@@ -128,33 +139,65 @@
               </div>
             </div>
 
-            <div v-if="streamingMessage" class="message-card assistant">
+            <!-- 工作流步骤 + 流式响应 (合并为统一卡片) -->
+            <div v-if="loading || streamingNodes.length > 0" class="message-card assistant streaming-card">
               <div class="message-meta">
                 <div class="meta-left">
                   <a-avatar :src="AIAvatar" :style="{ flexShrink: 0 }"></a-avatar>
                   <div class="meta-info">
                     <span class="meta-name">Spring AI</span>
-                    <span class="meta-time">实时生成</span>
+                    <span class="meta-time">{{ selectedModel }}</span>
                   </div>
                 </div>
               </div>
               <div class="message-content">
-                <MarkdownRenderer :content="streamingMessage" />
-              </div>
-            </div>
+                <!-- 思考过程 (可折叠时间线) -->
+                <div v-if="streamingNodes.length > 0" class="thinking-process">
+                  <div class="thinking-header" @click="thinkingExpanded = !thinkingExpanded">
+                    <span class="thinking-arrow" :class="{ expanded: thinkingExpanded }">
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <path d="M4.5 2.5L8 6L4.5 9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </span>
+                    <span class="thinking-label">{{ allStepsComplete ? '思考完成' : '思考中...' }}</span>
+                    <span v-if="!allStepsComplete" class="thinking-pulse"></span>
+                    <span class="thinking-badge">{{ streamingNodes.length }} 步</span>
+                  </div>
+                  <div class="thinking-timeline-wrapper" :class="{ collapsed: !thinkingExpanded }">
+                    <div class="thinking-timeline">
+                    <div
+                      v-for="(node, idx) in streamingNodes"
+                      :key="'step-' + idx"
+                      class="timeline-step"
+                    >
+                      <div class="step-indicator">
+                        <div class="step-dot" :class="{ active: node.status === 'processing', done: node.status !== 'processing' }">
+                          <svg v-if="node.status !== 'processing'" class="check-icon" width="10" height="10" viewBox="0 0 10 10" fill="none">
+                            <path d="M2 5L4.5 7.5L8 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                          </svg>
+                        </div>
+                        <div v-if="idx < streamingNodes.length - 1" class="step-line" :class="{ done: node.status !== 'processing' }"></div>
+                      </div>
+                      <div class="step-body">
+                        <span class="step-name">{{ getStepLabel(node.node) }}</span>
+                        <span class="step-desc">{{ node.message }}</span>
+                      </div>
+                    </div>
+                    </div>
+                  </div>  <!-- thinking-timeline-wrapper -->
+                </div>
 
-            <div v-if="loading && !streamingMessage" class="message-card assistant">
-              <div class="message-meta">
-                <div class="meta-left">
-                  <a-avatar :src="AIAvatar" :style="{ flexShrink: 0 }"></a-avatar>
-                  <div class="meta-info">
-                    <span class="meta-name">Spring AI</span>
-                    <span class="meta-time">思考中...</span>
-                  </div>
+                <!-- 流式内容输出 -->
+                <div v-if="streamingContent" class="streaming-response">
+                  <MarkdownRenderer :content="streamingContent" />
                 </div>
-              </div>
-              <div class="message-content">
-                <a-spin size="small" />
+
+                <!-- 初始加载动画 (无节点时) -->
+                <div v-if="!streamingContent && streamingNodes.length === 0" class="thinking-dots">
+                  <span class="dot"></span>
+                  <span class="dot"></span>
+                  <span class="dot"></span>
+                </div>
               </div>
             </div>
 
@@ -210,7 +253,7 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick, onMounted, h } from 'vue'
+import { ref, computed, nextTick, onMounted, watch, h } from 'vue'
 import { message, Modal } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
 import { ArrowUpOutlined, UserOutlined, SettingOutlined, LogoutOutlined, ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons-vue'
@@ -227,13 +270,27 @@ const activeChat = ref(null)
 const inputMessage = ref('')
 const loading = ref(false)
 const messagesContainer = ref(null)
-const streamingMessage = ref('')
+const streamingNodes = ref([])
+// Each element: { node, status, message, content }
+const thinkingExpanded = ref(true)
+
 const userName = ref(localStorage.getItem('username') || '我')
 const abortController = ref(null)
 const panda = ref("/images/panda.svg")
 const AIAvatar = ref("/images/xurx_masaike.png")
 const SpringAIAvatar = ref("/images/spring-logo.svg")
 const selectedModel = ref('deepseek') // 默认为deepseek
+const modelDropdownOpen = ref(false)
+const modelList = [
+  { value: 'deepseek', name: 'DeepSeek', desc: '深度推理，适合复杂问题' },
+  { value: 'qwen', name: 'Qwen', desc: '通义千问，多场景通用' },
+  { value: 'zhipu', name: 'Zhipu', desc: '智谱清言，高效对话' },
+]
+const modelMap = Object.fromEntries(modelList.map(m => [m.value, m]))
+const selectModel = (value) => {
+  selectedModel.value = value
+  modelDropdownOpen.value = false
+}
 const handleMenuClick = ({ key }) => {
   if (key === 'logout') {
     Modal.confirm({
@@ -282,6 +339,28 @@ const currentMessages = computed(() => {
   const chat = chats.value.find(c => c.id === activeChat.value)
   return chat ? chat.messages : []
 })
+
+const allStepsComplete = computed(() => {
+  return streamingNodes.value.length > 0 &&
+    streamingNodes.value.every(n => n.status !== 'processing')
+})
+
+const streamingContent = computed(() => {
+  const nodes = [...streamingNodes.value]
+  const execNode = nodes.reverse().find(n => n.node !== 'intent_recognition' && n.content)
+  return execNode ? execNode.content : ''
+})
+
+const getStepLabel = (nodeName) => {
+  const labels = {
+    'intent_recognition': '意图识别',
+    'tool_execution': '工具调用',
+    'response_generation': '生成回答',
+    'database_query': '数据库查询',
+    'math_calculation': '数学计算',
+  }
+  return labels[nodeName] || nodeName
+}
 
 const toggleSidebar = () => {
   sidebarCollapsed.value = !sidebarCollapsed.value
@@ -559,7 +638,8 @@ const sendMessage = async () => {
   await nextTick()
 
   loading.value = true
-  streamingMessage.value = ''
+  streamingNodes.value = []
+  thinkingExpanded.value = true
   scrollToBottom()
 
   // 创建新的 AbortController
@@ -569,8 +649,18 @@ const sendMessage = async () => {
     const fullMessage = await sendChatMessageStream(
       userMessage,
       selectedModel.value,
-      (chunk, fullMsg) => {
-        streamingMessage.value = fullMsg
+      (eventType, data) => {
+        if (eventType === 'step') {
+          const idx = streamingNodes.value.findIndex(n => n.node === data.node)
+          if (idx >= 0) {
+            streamingNodes.value.splice(idx, 1, { ...streamingNodes.value[idx], ...data })
+          } else {
+            streamingNodes.value.push({ ...data, content: '' })
+          }
+        } else if (eventType === 'token') {
+          const execNode = streamingNodes.value.findLast(n => n.node !== 'intent_recognition')
+          if (execNode) execNode.content = data.content
+        }
         scrollToBottom()
       },
       abortController.value.signal,
@@ -584,7 +674,7 @@ const sendMessage = async () => {
       time: getCurrentTime()
     })
 
-    streamingMessage.value = ''
+    streamingNodes.value = []
     saveChats()
 
   } catch (error) {
@@ -600,7 +690,7 @@ const sendMessage = async () => {
       content: '抱歉,服务暂时不可用',
       time: getCurrentTime()
     })
-    streamingMessage.value = ''
+    streamingNodes.value = []
   } finally {
     loading.value = false
     abortController.value = null
@@ -616,12 +706,27 @@ const handleKeydown = (e) => {
   sendMessage()
 }
 
+// 当流式内容到达且所有步骤完成时，延迟自动折叠思考过程
+let collapseTimer = null
+watch([streamingContent, allStepsComplete], ([content, done]) => {
+  if (collapseTimer) {
+    clearTimeout(collapseTimer)
+    collapseTimer = null
+  }
+  if (content && done) {
+    collapseTimer = setTimeout(() => {
+      thinkingExpanded.value = false
+      collapseTimer = null
+    }, 800)
+  }
+})
+
 onMounted(async () => {
   loadChats()
 
   // 从数据库加载历史记录
   await loadChatHistoryFromDB()
-
+  scrollToBottom()
 })
 </script>
 
@@ -643,7 +748,7 @@ onMounted(async () => {
 }
 
 .chat-header {
-  padding: 20px 24px;
+  padding: 10px 24px;
   border-bottom: 1px solid var(--border-color);
   background: var(--bg-primary);
   display: flex;
@@ -654,26 +759,14 @@ onMounted(async () => {
 
 .header-left {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.header-top {
-  display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
-.header-top img {
-  width: 40px;
-  height: 40px;
-}
-
-.header-top p {
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin: 0;
-  transition: color var(--transition-normal);
+.header-logo {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
 }
 
 .header-right {
@@ -699,67 +792,38 @@ onMounted(async () => {
   transform: rotate(15deg);
 }
 
-.model-selector-wrapper {
-  margin-right: 16px;
-}
-
-.model-selector {
-  width: 150px;
-  border-radius: 8px;
-}
-
-/* 禁用选项样式 - 浅色模式 */
-.model-selector :deep(.ant-select-item-option-disabled) {
-  color: rgba(0, 0, 0, 0.25) !important;
-  cursor: not-allowed !important;
-}
-
-.model-selector :deep(.ant-select-item-option-disabled .model-name) {
-  color: rgba(0, 0, 0, 0.25) !important;
-}
-
-/* 禁用选项样式 - 深色模式 */
-[data-theme="dark"] .model-selector :deep(.ant-select-item-option-disabled) {
-  color: rgba(255, 255, 255, 0.25) !important;
-}
-
-[data-theme="dark"] .model-selector :deep(.ant-select-item-option-disabled .model-name) {
-  color: rgba(255, 255, 255, 0.25) !important;
-}
-
-.model-selector :deep(.ant-select-selector) {
-  border-radius: 8px !important;
-  border: 1px solid var(--border-color) !important;
-  background: var(--bg-secondary) !important;
-  transition: all var(--transition-fast);
-  padding: 4px 12px !important;
-  height: auto !important;
-}
-
-.model-selector:hover :deep(.ant-select-selector) {
-  border-color: var(--accent-color) !important;
-  background: var(--bg-primary) !important;
-}
-
-.model-selector :deep(.ant-select-focused .ant-select-selector) {
-  border-color: var(--accent-color) !important;
-  box-shadow: 0 0 0 2px var(--accent-light) !important;
-}
-
-.model-option {
-  display: flex;
+/* ===== Model Trigger Button ===== */
+.model-trigger {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-}
-
-.model-icon {
-  font-size: 16px;
-}
-
-.model-name {
-  font-weight: 500;
+  gap: 4px;
+  padding: 4px 10px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background var(--transition-fast);
   color: var(--text-primary);
-  font-size: 14px;
+}
+
+.model-trigger:hover {
+  background: var(--bg-tertiary);
+}
+
+.model-trigger-name {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.model-trigger-arrow {
+  color: var(--text-tertiary);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.model-trigger-arrow.open {
+  transform: rotate(180deg);
 }
 
 .chat-content-wrapper {
@@ -1109,6 +1173,247 @@ onMounted(async () => {
   opacity: 0.5;
 }
 
+/* ===== 工作流步骤时间线 UI ===== */
+.streaming-card .message-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.thinking-process {
+  border-radius: 10px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  overflow: hidden;
+  transition: all var(--transition-fast);
+}
+
+.thinking-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--transition-fast);
+}
+
+.thinking-header:hover {
+  background: color-mix(in srgb, var(--bg-tertiary) 50%, transparent);
+}
+
+.thinking-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: var(--text-tertiary);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.thinking-arrow.expanded {
+  transform: rotate(90deg);
+}
+
+.thinking-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.thinking-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-color);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+.thinking-badge {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  background: var(--bg-tertiary);
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.thinking-timeline-wrapper {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.45s cubic-bezier(0.32, 0.72, 0, 1),
+              opacity 0.35s ease;
+  opacity: 1;
+}
+
+.thinking-timeline-wrapper.collapsed {
+  grid-template-rows: 0fr;
+  opacity: 0;
+}
+
+.thinking-timeline {
+  overflow: hidden;
+  padding: 4px 14px 14px;
+  min-height: 0;
+}
+
+.timeline-step {
+  display: flex;
+  gap: 12px;
+  min-height: 40px;
+  animation: stepSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes stepSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.step-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 22px;
+}
+
+.step-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--bg-primary);
+  border: 2px solid var(--border-color);
+}
+
+.step-dot.active {
+  border-color: var(--accent-color);
+  background: var(--accent-light);
+  animation: dotPulse 2s ease-in-out infinite;
+}
+
+.step-dot.active::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-color);
+}
+
+.step-dot.done {
+  border-color: var(--success-color);
+  background: var(--success-color);
+  color: white;
+}
+
+.check-icon {
+  width: 10px;
+  height: 10px;
+}
+
+@keyframes dotPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(37, 99, 235, 0);
+  }
+}
+
+.step-line {
+  width: 2px;
+  flex: 1;
+  min-height: 12px;
+  background: var(--border-color);
+  margin: 3px 0;
+  border-radius: 1px;
+  transition: background 0.4s ease;
+}
+
+.step-line.done {
+  background: var(--success-color);
+}
+
+.step-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 2px 0 10px;
+  min-width: 0;
+}
+
+.step-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.step-desc {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.streaming-response {
+  animation: contentFadeIn 0.3s ease;
+}
+
+@keyframes contentFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 三点加载动画 */
+.thinking-dots {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 0;
+}
+
+.thinking-dots .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+  animation: dotBounce 1.4s ease-in-out infinite both;
+}
+
+.thinking-dots .dot:nth-child(1) { animation-delay: 0s; }
+.thinking-dots .dot:nth-child(2) { animation-delay: 0.16s; }
+.thinking-dots .dot:nth-child(3) { animation-delay: 0.32s; }
+
+@keyframes dotBounce {
+  0%, 80%, 100% {
+    opacity: 0.3;
+    transform: scale(0.7);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .chat-content-column {
@@ -1181,5 +1486,69 @@ onMounted(async () => {
     padding: 14px 16px;
     font-size: 13px;
   }
+}
+</style>
+
+<style>
+/* ===== Model Dropdown Popover (global, popover renders outside scoped) ===== */
+.model-dropdown-popover .ant-popover-inner {
+  padding: 0 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+  border: 1px solid var(--border-color) !important;
+  background: var(--bg-primary) !important;
+  overflow: hidden;
+}
+
+.model-dropdown-panel {
+  min-width: 240px;
+  padding: 6px 0;
+}
+
+.model-dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  gap: 16px;
+}
+
+.model-dropdown-item:hover {
+  background: var(--bg-secondary);
+}
+
+.model-dropdown-item.selected {
+  background: transparent;
+}
+
+.model-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.model-item-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.model-item-desc {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+}
+
+.model-item-check {
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .model-dropdown-popover .ant-popover-inner {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2) !important;
 }
 </style>

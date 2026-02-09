@@ -1,7 +1,7 @@
 <template>
   <div class="sidebar" :class="{ collapsed: collapsed }" role="navigation" aria-label="侧边栏导航">
     <div class="sidebar-header">
-      <span v-if="!collapsed" class="logo">AI</span>
+      <span v-if="!collapsed" class="logo">Spring AI</span>
       <a-button
         type="text"
         @click="toggleSidebar"
@@ -17,8 +17,9 @@
 
     <div v-if="!collapsed" class="sidebar-content">
       <button class="new-chat-btn" @click="createNewChat" aria-label="创建新对话">
-        <PlusOutlined />
-        <span>新对话</span>
+        <!-- <PlusOutlined /> -->
+         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 0.599609C3.91309 0.599609 0.599609 3.91309 0.599609 8C0.599609 9.13376 0.855461 10.2098 1.3125 11.1719L1.5918 11.7588L2.76562 11.2012L2.48633 10.6143C2.11034 9.82278 1.90039 8.93675 1.90039 8C1.90039 4.63106 4.63106 1.90039 8 1.90039C11.3689 1.90039 14.0996 4.63106 14.0996 8C14.0996 11.3689 11.3689 14.0996 8 14.0996C7.31041 14.0996 6.80528 14.0514 6.35742 13.9277C5.91623 13.8059 5.49768 13.6021 4.99707 13.2529C4.26492 12.7422 3.21611 12.5616 2.35156 13.1074L2.33789 13.1162L2.32422 13.126L1.58789 13.6436L2.01953 14.9297L3.0459 14.207C3.36351 14.0065 3.83838 14.0294 4.25293 14.3184C4.84547 14.7317 5.39743 15.011 6.01172 15.1807C6.61947 15.3485 7.25549 15.4004 8 15.4004C12.0869 15.4004 15.4004 12.0869 15.4004 8C15.4004 3.91309 12.0869 0.599609 8 0.599609ZM7.34473 4.93945V7.34961H4.93945V8.65039H7.34473V11.0605H8.64551V8.65039H11.0605V7.34961H8.64551V4.93945H7.34473Z" fill="currentColor"></path></svg>
+        <span>开启新对话</span>
       </button>
 
       <div class="chat-list" role="list" aria-label="对话列表">
@@ -56,6 +57,9 @@
       >
         <BulbOutlined aria-hidden="true" />
         <span>{{ isDark ? '浅色模式' : '深色模式' }}</span>
+        <span class="theme-switch" :class="{ on: isDark }">
+          <span class="switch-dot"></span>
+        </span>
       </button>
     </div>
   </div>
@@ -152,30 +156,29 @@ const deleteChat = (id) => {
 
 .sidebar-header {
   padding: 16px;
-  border-bottom: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  min-height: 60px;
-  transition: border-color var(--transition-normal);
+  min-height: 56px;
 }
 
 .logo {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--text-primary);
-  letter-spacing: -0.5px;
+  letter-spacing: -0.3px;
 }
 
 .toggle-btn {
-  color: var(--text-secondary);
-  width: 32px;
-  height: 32px;
+  color: var(--text-tertiary);
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-md);
+  border-radius: 8px;
   transition: background var(--transition-fast), color var(--transition-fast);
+  font-size: 13px;
 }
 
 .toggle-btn:hover {
@@ -197,39 +200,45 @@ const deleteChat = (id) => {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  margin-bottom: 12px;
-  border: 1px dashed var(--border-color);
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 14px;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 12px;
+  margin-bottom: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: background var(--transition-fast), border-color var(--transition-fast);
 }
 
 .new-chat-btn:hover {
-  border-color: var(--accent-color);
-  color: var(--accent-color);
-  background: var(--accent-light);
+  background: var(--bg-tertiary);
+  border-color: var(--text-tertiary);
+}
+
+.new-chat-btn:active {
+  opacity: 0.85;
 }
 
 .chat-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .chat-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px;
-  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  border-radius: 8px;
   cursor: pointer;
   color: var(--text-secondary);
   transition: all var(--transition-fast);
+  position: relative;
 }
 
 .chat-item:hover {
@@ -247,10 +256,26 @@ const deleteChat = (id) => {
   color: var(--accent-color);
 }
 
+.chat-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 14px;
+  border-radius: 0 2px 2px 0;
+  background: var(--accent-color);
+}
+
 .chat-icon {
-  font-size: 14px;
+  font-size: 13px;
   flex-shrink: 0;
-  opacity: 0.7;
+  opacity: 0.5;
+}
+
+.chat-item.active .chat-icon {
+  opacity: 1;
 }
 
 .chat-title {
@@ -268,14 +293,15 @@ const deleteChat = (id) => {
   background: transparent;
   color: var(--text-tertiary);
   cursor: pointer;
-  border-radius: var(--radius-sm);
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all var(--transition-fast);
   flex-shrink: 0;
-  min-width: 24px;
-  min-height: 24px;
+  min-width: 22px;
+  min-height: 22px;
+  font-size: 12px;
 }
 
 .chat-item:hover .delete-btn,
@@ -313,8 +339,8 @@ const deleteChat = (id) => {
 }
 
 .sidebar-footer {
-  padding: 12px;
-  border-top: 1px solid var(--border-color);
+  padding: 10px 12px;
+  border-top: 1px solid var(--border-light);
   transition: border-color var(--transition-normal);
 }
 
@@ -323,18 +349,49 @@ const deleteChat = (id) => {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 14px;
+  padding: 8px 12px;
   border: none;
-  border-radius: var(--radius-md);
-  background: var(--bg-tertiary);
-  color: var(--text-secondary);
-  font-size: 13px;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: 12px;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
 .theme-toggle:hover {
-  color: var(--text-primary);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.theme-switch {
+  width: 28px;
+  height: 16px;
+  border-radius: 8px;
+  background: var(--border-color);
+  margin-left: auto;
+  position: relative;
+  transition: background 0.25s ease;
+  flex-shrink: 0;
+}
+
+.theme-switch.on {
+  background: var(--accent-color);
+}
+
+.switch-dot {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: white;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-switch.on .switch-dot {
+  transform: translateX(12px);
 }
 
 /* 响应式设计 */

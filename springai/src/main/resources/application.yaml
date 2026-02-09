@@ -81,5 +81,15 @@ logging:
 #    org.springframework.ai.chat.client: DEBUG
 #    com.xurx.springai: DEBUG
 
+# Actuator configuration
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+
+
 server:
   port: 8080

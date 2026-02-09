@@ -4,7 +4,6 @@ import com.alibaba.cloud.ai.dashscope.embedding.DashScopeEmbeddingModel;
 import com.xurx.springai.advisor.SensitiveWordFilterAdvisor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryRepository;
@@ -19,10 +18,14 @@ import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.zhipuai.ZhiPuAiChatModel;
 import org.springframework.ai.zhipuai.ZhiPuAiEmbeddingModel;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.core.io.Resource;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -35,15 +38,8 @@ public class ChatClientConfiguration {
     private final DashScopeChatModel dashScopeModel;
     private final ZhiPuAiEmbeddingModel zhiPuAiEmbeddingModel;
 
-    private final ToolCallbackProvider mcpToolCallbackProvider;
-
-
-    // 默认系统提示词
-    private static final String DEFAULT_SYSTEM_PROMPT = """
-            你是一位数据分析AI专家。
-            当前用户：
-            姓名：{name}, 身份：{identity}。
-            """;
+    @Value("classpath:prompts/system-default.txt")
+    private Resource systemPromptResource;
 
     /**
      * 敏感词列表 Bean
@@ -55,9 +51,6 @@ public class ChatClientConfiguration {
 
     /**
      * 敏感词过滤 Advisor
-     *
-     * @param sensitiveWords
-     * @return
      */
     @Bean
     public SensitiveWordFilterAdvisor sensitiveWordFilterAdvisor(List<String> sensitiveWords) {
@@ -66,9 +59,6 @@ public class ChatClientConfiguration {
 
     /**
      * 聊天记忆组件
-     *
-     * @param jdbcChatMemoryRepository
-     * @return
      */
     @Bean
     public ChatMemory chatMemory(JdbcChatMemoryRepository jdbcChatMemoryRepository) {
@@ -99,7 +89,7 @@ public class ChatClientConfiguration {
         return RetrievalAugmentationAdvisor.builder()
                 .documentRetriever(vectorStoreDocumentRetriever)
                 .queryAugmenter(ContextualQueryAugmenter.builder()
-                        .allowEmptyContext(true)  // 关键：允许空上下文，不阻止MCP工具调用
+                        .allowEmptyContext(true)
                         .build())
                 .build();
     }
@@ -115,68 +105,49 @@ public class ChatClientConfiguration {
                 "qwen", dashscopeChatClient,
                 "deepseek", deepseekChatClient,
                 "zhipu", zhipuChatClient
-
         );
+    }
+
+    private String loadSystemPrompt() {
+        try {
+            return systemPromptResource.getContentAsString(StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load system prompt template", e);
+        }
     }
 
     /**
      * 百炼 ChatClient 实例
      */
     @Bean
-    public ChatClient dashscopeChatClient(SensitiveWordFilterAdvisor sensitiveWordFilterAdvisor,
-                                          RetrievalAugmentationAdvisor retrievalAugmentationAdvisor,
-                                          ChatMemory chatMemory) {
+    public ChatClient dashscopeChatClient(SensitiveWordFilterAdvisor sensitiveWordFilterAdvisor) {
         return ChatClient.builder(dashScopeModel)
-                .defaultSystem(DEFAULT_SYSTEM_PROMPT)
-                .defaultToolCallbacks(mcpToolCallbackProvider.getToolCallbacks())
-                .defaultAdvisors(
-                        sensitiveWordFilterAdvisor,
-                        retrievalAugmentationAdvisor,
-                        MessageChatMemoryAdvisor.builder(chatMemory).build()
-                )
+                .defaultSystem(loadSystemPrompt())
+                .defaultAdvisors(sensitiveWordFilterAdvisor)
                 .build();
     }
 
     /**
      * 智谱 ChatClient 实例
-     *
-     * @return
      */
     @Bean
-    public ChatClient zhipuChatClient(SensitiveWordFilterAdvisor sensitiveWordFilterAdvisor,
-                                      RetrievalAugmentationAdvisor retrievalAugmentationAdvisor,
-                                      ChatMemory chatMemory) {
+    public ChatClient zhipuChatClient(SensitiveWordFilterAdvisor sensitiveWordFilterAdvisor) {
         return ChatClient.builder(ZhiPuChatModel)
-                .defaultSystem(DEFAULT_SYSTEM_PROMPT)
-                .defaultToolCallbacks(mcpToolCallbackProvider.getToolCallbacks())
-                .defaultAdvisors(
-                        sensitiveWordFilterAdvisor,
-                        retrievalAugmentationAdvisor,
-                        MessageChatMemoryAdvisor.builder(chatMemory).build()
-                )
+                .defaultSystem(loadSystemPrompt())
+                .defaultAdvisors(sensitiveWordFilterAdvisor)
                 .build();
     }
 
     /**
      * DeepSeek ChatClient 实例
-     *
-     * @return
      */
     @Bean
-    public ChatClient deepseekChatClient(SensitiveWordFilterAdvisor sensitiveWordFilterAdvisor,
-                                         RetrievalAugmentationAdvisor retrievalAugmentationAdvisor,
-                                         ChatMemory chatMemory) {
-            return ChatClient.builder(deepSeekChatModel)
-                    .defaultSystem(DEFAULT_SYSTEM_PROMPT)
-                    .defaultAdvisors(
-                            sensitiveWordFilterAdvisor,
-                            retrievalAugmentationAdvisor,
-                            MessageChatMemoryAdvisor.builder(chatMemory).build()
-                    )
-                    .defaultToolCallbacks(mcpToolCallbackProvider.getToolCallbacks())
-                    .build();
+    public ChatClient deepseekChatClient(SensitiveWordFilterAdvisor sensitiveWordFilterAdvisor) {
+        return ChatClient.builder(deepSeekChatModel)
+                .defaultSystem(loadSystemPrompt())
+                .defaultAdvisors(sensitiveWordFilterAdvisor)
+                .build();
     }
-
 
     /**
      * 默认的 Embedding 模型
