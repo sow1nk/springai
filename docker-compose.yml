@@ -133,7 +133,7 @@ services:
     container_name: springai-nginx
     restart: unless-stopped
     ports:
-      - "8085:80"
+      - "80:80"
     depends_on:
       - springai-backend
     networks:
