@@ -42,7 +42,7 @@ spring:
         sse:
           connections:
             server1:
-              url: http://localhost:8081
+              url: ${MCP_SERVER_URL:http://localhost:8081}
 
     chat:
       memory:

@@ -34,6 +34,6 @@ EXPOSE 8081
 
 # 简单健康检查：端口可用即视为健康
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
-    CMD curl --fail --silent http://localhost:8081/actuator/health || curl --fail --silent http://localhost:8081 || exit 1
+    CMD curl -s -o /dev/null http://localhost:8081 || exit 1
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

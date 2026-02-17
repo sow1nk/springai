@@ -38,7 +38,7 @@ EXPOSE 8080
 
 # 健康检查（使用简单的端口检查）
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:8080 || exit 1
+    CMD curl -s -o /dev/null http://localhost:8080 || exit 1
 
 # JVM 优化参数
 ENV JAVA_OPTS="-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom"

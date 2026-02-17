@@ -1,5 +1,3 @@
-version: '3.8'
-
 # 生产环境覆盖配置
 services:
   mysql:

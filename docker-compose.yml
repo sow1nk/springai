@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # MySQL 数据库
   mysql:
@@ -23,6 +21,7 @@ services:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
+      start_period: 30s
       retries: 5
     logging:
       driver: "json-file"
@@ -37,6 +36,7 @@ services:
     restart: unless-stopped
     command: ["redis-stack-server", "--requirepass", "${REDIS_PASSWORD:-redis123}"]
     environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis123}
       TZ: Asia/Shanghai
     ports:
       - "6380:6379"
@@ -45,55 +45,11 @@ services:
     networks:
       - springai-network
     healthcheck:
-      test: ["CMD", "sh", "-c", "redis-cli -a $$REDIS_PASSWORD ping || exit 1"]
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" ping | grep -q PONG"]
       interval: 10s
       timeout: 5s
+      start_period: 10s
       retries: 5
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  # Spring Boot 后端
-  springai-backend:
-    build:
-      context: ./springai
-      dockerfile: Dockerfile
-    container_name: springai-backend
-    restart: unless-stopped
-    environment:
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
-      # 数据库配置
-      DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-springai}?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-      DATASOURCE_USERNAME: ${MYSQL_USER:-springai}
-      DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-springai123}
-      # Redis 配置
-      DATA_REDIS_HOST: redis
-      DATA_REDIS_PORT: 6379
-      DATA_REDIS_PASSWORD: ${REDIS_PASSWORD:-redis123}
-      # AI 模型配置
-      MODELARGS_MODELS_DEEPSEEK_API-KEY: ${DEEPSEEK_API_KEY}
-      MODELARGS_MODELS_DEEPSEEK_BASE-URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
-      MODELARGS_MODELS_DEEPSEEK_NAME: ${DEEPSEEK_MODEL:-deepseek-chat}
-      MODELARGS_MODELS_QWEN_API-KEY: ${QWEN_API_KEY}
-      MODELARGS_MODELS_QWEN_NAME: ${QWEN_MODEL:-qwen-turbo}
-      MODELARGS_MODELS_ZHIPUAI-EMBED_API-KEY: ${ZHIPUAI_API_KEY}
-      MODELARGS_MODELS_ZHIPUAI-EMBED_NAME: ${ZHIPUAI_EMBED_MODEL:-embedding-2}
-      MODELARGS_MODELS_ZHIPUAI-EMBED_DIMENSIONS: ${ZHIPUAI_EMBED_DIMENSIONS:-1024}
-      MODELARGS_MODELS_ZHIPUAI-EMBED_BASE-URL: ${ZHIPUAI_BASE_URL:-https://open.bigmodel.cn/api/paas}
-      TZ: Asia/Shanghai
-    ports:
-      - "8080:8080"
-    depends_on:
-      mysql:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - springai-network
-    volumes:
-      - backend-logs:/app/logs
     logging:
       driver: "json-file"
       options:
@@ -119,6 +75,67 @@ services:
         condition: service_healthy
     networks:
       - springai-network
+    healthcheck:
+      test: ["CMD", "curl", "-s", "-o", "/dev/null", "http://localhost:8081/"]
+      interval: 10s
+      timeout: 5s
+      start_period: 60s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Spring Boot 后端
+  springai-backend:
+    build:
+      context: ./springai
+      dockerfile: Dockerfile
+    container_name: springai-backend
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      # 数据库配置
+      DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-springai}?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      DATASOURCE_USERNAME: ${MYSQL_USER:-springai}
+      DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-springai123}
+      # Redis 配置
+      DATA_REDIS_HOST: redis
+      DATA_REDIS_PORT: 6379
+      DATA_REDIS_PASSWORD: ${REDIS_PASSWORD:-redis123}
+      # 容器内必须走服务名，不能使用 localhost
+      MCP_SERVER_URL: ${MCP_SERVER_URL:-http://springai-mcp-server:8081}
+      # AI 模型配置（环境变量名中 点→下划线、连字符→下划线，与 application.yaml 占位符路径一一对应）
+      MODELARGS_MODELS_DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+      MODELARGS_MODELS_DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+      MODELARGS_MODELS_DEEPSEEK_NAME: ${DEEPSEEK_MODEL:-deepseek-chat}
+      MODELARGS_MODELS_QWEN_API_KEY: ${QWEN_API_KEY}
+      MODELARGS_MODELS_QWEN_NAME: ${QWEN_MODEL:-qwen-flash}
+      MODELARGS_MODELS_ZHIPUAI_EMBED_API_KEY: ${ZHIPUAI_API_KEY}
+      MODELARGS_MODELS_ZHIPUAI_EMBED_NAME: ${ZHIPUAI_EMBED_MODEL:-embedding-3}
+      MODELARGS_MODELS_ZHIPUAI_EMBED_DIMENSIONS: ${ZHIPUAI_EMBED_DIMENSIONS:-1024}
+      MODELARGS_MODELS_ZHIPUAI_EMBED_BASE_URL: ${ZHIPUAI_BASE_URL:-https://open.bigmodel.cn/api/paas}
+      TZ: Asia/Shanghai
+    ports:
+      - "8080:8080"
+    depends_on:
+      springai-mcp-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - springai-network
+    healthcheck:
+      test: ["CMD", "curl", "-s", "-o", "/dev/null", "http://localhost:8080/"]
+      interval: 10s
+      timeout: 5s
+      start_period: 60s
+      retries: 5
+    volumes:
+      - backend-logs:/app/logs
     logging:
       driver: "json-file"
       options:
@@ -133,9 +150,10 @@ services:
     container_name: springai-nginx
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "8085:80"
     depends_on:
-      - springai-backend
+      springai-backend:
+        condition: service_healthy
     networks:
       - springai-network
     logging:
